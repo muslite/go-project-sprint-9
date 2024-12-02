@@ -34,12 +34,15 @@ func Generator(ctx context.Context, ch chan<- int64, fn func(int64)) {
 func Worker(in <-chan int64, out chan<- int64) {
 	// 2. Функция Worker
 	// ...
-	for {
-		v, ok := <-in
-		if !ok {
-			close(out)
-			break
-		}
+	/* 	for {
+	v, ok := <-in
+	if !ok {
+		close(out)
+		break
+	} */
+	// Предпочтительно чтение из канала вместо бесконечного цикла.
+	defer close(out)
+	for v := range in {
 		out <- v
 		time.Sleep(time.Millisecond)
 	}
@@ -87,11 +90,13 @@ func main() {
 		wg.Add(1)
 		go func(in_cn <-chan int64, cn int) {
 			defer wg.Done()
-			for {
-				v, ok := <-in_cn
-				if !ok {
-					break
-				}
+			/* 			for {
+			v, ok := <-in_cn
+			if !ok {
+				break
+			} */
+			// Предпочтительно чтение из канала вместо бесконечного цикла.
+			for v := range in_cn {
 				amounts[cn]++
 				chOut <- v
 			}
@@ -110,11 +115,13 @@ func main() {
 
 	// 5. Читаем числа из результирующего канала
 	// ...
-	for {
-		v, ok := <-chOut
-		if !ok {
-			break
-		}
+	// Предпочтительно чтение из канала вместо бесконечного цикла.
+	/* 	for {
+	v, ok := <-chOut
+	if !ok {
+		break
+	} */
+	for v := range chOut {
 		count++
 		sum += v
 	}
